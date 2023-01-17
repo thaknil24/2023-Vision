@@ -1,74 +1,41 @@
-/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-*/
-
 package frc.robot;
 
-import edu.wpi.first.apriltag.AprilTag;
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.Constants.FieldConstants;
-import frc.robot.Constants.VisionConstants;
-import java.util.ArrayList;
-import java.util.Optional;
-import org.photonvision.EstimatedRobotPose;
+import java.util.List;
+
 import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
+import org.photonvision.targeting.TargetCorner;
 
-public class PhotonCameraWrapper {
-   public PhotonCamera photonCamera;
-   public PhotonPoseEstimator photonPoseEstimator;
+import edu.wpi.first.math.geometry.Transform2d;
 
-   public PhotonCameraWrapper() {
-       // Set up a test arena of two apriltags at the center of each driver station set
-       final AprilTag tag18 =
-               new AprilTag(
-                       18,
-                       new Pose3d(
-                               new Pose2d(
-                                       FieldConstants.length,
-                                       FieldConstants.width / 2.0,
-                                       Rotation2d.fromDegrees(180))));
-       final AprilTag tag01 =
-               new AprilTag(
-                       01,
-                       new Pose3d(new Pose2d(0.0, FieldConstants.width / 2.0, Rotation2d.fromDegrees(0.0))));
-       ArrayList<AprilTag> atList = new ArrayList<AprilTag>();
-       atList.add(tag18);
-       atList.add(tag01);
+public class VisionCam {
 
-       // TODO - once 2023 happens, replace this with just loading the 2023 field arrangement
-       AprilTagFieldLayout atfl =
-               new AprilTagFieldLayout(atList, FieldConstants.length, FieldConstants.width);
+//var camera = new PhotonCamera("newCam");
 
-       // Forward Camera
-       photonCamera =
-               new PhotonCamera(
-                       VisionConstants
-                               .cameraName); // Change the name of your camera here to whatever it is in the
-       // PhotonVision UI.
+PhotonCamera camUS = new PhotonCamera("spicyNoodles"); //change string to match name of camera
 
-       // Create pose estimator
-       photonPoseEstimator =
-               new PhotonPoseEstimator(
-                       atfl, PoseStrategy.CLOSEST_TO_REFERENCE_POSE, photonCamera, VisionConstants.robotToCam);
-   }
+ // Query the latest result from PhotonVision
+ PhotonPipelineResult result = camUS.getLatestResult();
 
-   /**
-    * @param estimatedRobotPose The current best guess at robot pose
-    * @return A pair of the fused camera observations to a single Pose2d on the field, and the time
-    *     of the observation. Assumes a planar field and the robot is always firmly on the ground
-    */
-   public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
-       photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
-       return photonPoseEstimator.update();
-   }
+ // Check if the latest result has any targets.
+boolean hasTargets = result.hasTargets();
+
+// Get a list of currently tracked targets.
+List<PhotonTrackedTarget> targets = result.getTargets();
+
+// Get the current best target.
+PhotonTrackedTarget target = result.getBestTarget();
+
+
+
+ // Get information from target.
+double yaw = target.getYaw();
+double pitch = target.getPitch();
+double area     = target.getArea();
+double skew = target.getSkew();
+Transform2d pose = target.getCameraToTarget();
+List<TargetCorner> corners = target.getCorners();
+
 }
+
